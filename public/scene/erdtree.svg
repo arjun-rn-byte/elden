@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" role="presentation">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#050504" />
+      <stop offset="0.34" stop-color="#080705" />
+      <stop offset="0.58" stop-color="#100d07" />
+      <stop offset="0.74" stop-color="#1c1509" />
+      <stop offset="0.86" stop-color="#120e07" />
+      <stop offset="1" stop-color="#070605" />
+    </linearGradient>
+
+    <radialGradient id="dawn" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffedc4" stop-opacity="0.7" />
+      <stop offset="0.22" stop-color="#e9c47f" stop-opacity="0.34" />
+      <stop offset="0.55" stop-color="#a3803f" stop-opacity="0.14" />
+      <stop offset="0.8" stop-color="#4a3a1b" stop-opacity="0.05" />
+      <stop offset="1" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+
+    <linearGradient id="ray" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#ffe6b0" stop-opacity="0.34" />
+      <stop offset="0.45" stop-color="#d9b271" stop-opacity="0.1" />
+      <stop offset="1" stop-color="#8a6c35" stop-opacity="0" />
+    </linearGradient>
+
+    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e8c98c" stop-opacity="0.55" />
+      <stop offset="0.5" stop-color="#c6a45a" stop-opacity="0.16" />
+      <stop offset="1" stop-color="#c6a45a" stop-opacity="0" />
+    </linearGradient>
+
+    <linearGradient id="mist" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#c4a878" stop-opacity="0" />
+      <stop offset="0.3" stop-color="#e0c58f" stop-opacity="0" />
+      <stop offset="0.5" stop-color="#e6cd9a" stop-opacity="0.16" />
+      <stop offset="0.7" stop-color="#e0c58f" stop-opacity="0.12" />
+      <stop offset="1" stop-color="#c4a878" stop-opacity="0" />
+    </linearGradient>
+
+    <radialGradient id="vignette" cx="0.5" cy="0.62" r="0.78">
+      <stop offset="0.3" stop-color="#030303" stop-opacity="0" />
+      <stop offset="0.68" stop-color="#030303" stop-opacity="0.42" />
+      <stop offset="1" stop-color="#030303" stop-opacity="0.93" />
+    </radialGradient>
+
+    <filter id="soft" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="16" />
+    </filter>
+
+    <filter id="softer" x="-35%" y="-35%" width="170%" height="170%">
+      <feGaussianBlur stdDeviation="42" />
+    </filter>
+
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch" />
+      <feColorMatrix type="saturate" values="0" />
+    </filter>
+  </defs>
+
+  <rect width="1600" height="1000" fill="url(#sky)" />
+
+  <!-- dawn behind the ridge -->
+  <ellipse cx="800" cy="716" rx="980" ry="360" fill="url(#dawn)" />
+  <ellipse cx="800" cy="712" rx="620" ry="150" fill="url(#dawn)" opacity="0.8" />
+  <ellipse cx="800" cy="706" rx="430" ry="120" fill="url(#dawn)" opacity="0.9" />
+
+  <!-- shafts rising from the light -->
+  <g filter="url(#softer)" opacity="0.85">
+    <polygon points="690,712 452,60 596,60 760,706" fill="url(#ray)" />
+    <polygon points="910,712 1018,60 1150,60 980,706" fill="url(#ray)" opacity="0.85" />
+    <polygon points="800,710 742,60 852,60 812,710" fill="url(#ray)" opacity="0.7" />
+    <polygon points="560,716 190,60 300,60 620,710" fill="url(#ray)" opacity="0.4" />
+    <polygon points="1030,716 1310,60 1420,60 1090,712" fill="url(#ray)" opacity="0.35" />
+  </g>
+
+  <!-- far ridgeline, catching the light -->
+  <path d="M0 660 C 120 636 210 652 320 628 C 430 604 470 634 560 622 C 650 610 700 578 800 584 C 900 590 960 566 1050 592 C 1140 618 1210 606 1300 632 C 1390 658 1500 640 1600 664 L1600 1000 L0 1000 Z" fill="#0b0a08" opacity="0.92" />
+  <path d="M0 660 C 120 636 210 652 320 628 C 430 604 470 634 560 622 C 650 610 700 578 800 584 C 900 590 960 566 1050 592 C 1140 618 1210 606 1300 632 C 1390 658 1500 640 1600 664" fill="none" stroke="#e8c98c" stroke-opacity="0.14" stroke-width="1.6" filter="url(#soft)" />
+
+  <!-- mist on the valley floor -->
+  <g filter="url(#soft)">
+    <rect y="700" width="1600" height="66" fill="url(#mist)" />
+    <rect y="762" width="1600" height="40" fill="url(#mist)" opacity="0.55" />
+  </g>
+
+  <!-- mid ridge -->
+  <path d="M0 742 C 150 724 280 748 420 742 C 560 736 660 758 800 756 C 940 754 1060 730 1200 742 C 1340 754 1480 738 1600 748 L1600 1000 L0 1000 Z" fill="#070706" />
+
+  <!-- broken rampart, left -->
+  <g fill="#040403">
+    <path d="M0 1000 L0 690 L38 690 L38 668 L96 668 L96 700 L150 700 L150 682 L206 682 L206 712 L262 712 L262 696 L312 696 L312 726 L340 726 L340 1000 Z" />
+    <path d="M60 640 L92 640 L92 690 L60 690 Z" />
+    <path d="M186 604 L216 604 L216 682 L186 682 Z" />
+    <path d="M296 578 L326 578 L326 696 L296 696 Z" />
+  </g>
+  <path d="M0 690 L38 690 L38 668 L96 668 L96 700 L150 700 L150 682 L206 682 L206 712 L262 712 L262 696 L312 696 L312 726 L340 726" fill="none" stroke="#e8c98c" stroke-opacity="0.16" stroke-width="1.6" filter="url(#soft)" />
+
+  <!-- broken rampart, right -->
+  <g fill="#040403">
+    <path d="M1600 1000 L1600 706 L1546 706 L1546 682 L1486 682 L1486 716 L1428 716 L1428 698 L1370 698 L1370 728 L1316 728 L1316 712 L1268 712 L1268 1000 Z" />
+    <path d="M1526 648 L1558 648 L1558 682 L1526 682 Z" />
+    <path d="M1408 610 L1440 610 L1440 698 L1408 698 Z" />
+    <path d="M1300 584 L1332 584 L1332 712 L1300 712 Z" />
+  </g>
+  <path d="M1600 706 L1546 706 L1546 682 L1486 682 L1486 716 L1428 716 L1428 698 L1370 698 L1370 728 L1316 728 L1316 712 L1268 712" fill="none" stroke="#e8c98c" stroke-opacity="0.14" stroke-width="1.6" filter="url(#soft)" />
+
+  <!-- near ridge and the pilgrim -->
+  <path d="M0 890 C 180 872 320 900 470 894 C 620 888 720 906 840 900 C 980 894 1100 874 1240 886 C 1380 898 1490 880 1600 892 L1600 1000 L0 1000 Z" fill="#040404" />
+  <path d="M0 952 C 210 934 360 958 540 954 C 700 950 800 968 960 962 C 1140 956 1260 936 1420 950 L1600 964 L1600 1000 L0 1000 Z" fill="#020202" />
+
+  <g fill="#010101">
+    <path d="M785 972 C 780 950 779 934 782 922 C 784 912 793 910 796 919 C 800 930 799 950 797 972 Z" />
+    <circle cx="789" cy="914" r="4.4" />
+  </g>
+  <path d="M782 922 C 784 912 793 910 796 919" stroke="#f0d69c" stroke-opacity="0.3" stroke-width="1.3" fill="none" />
+
+  <rect width="1600" height="1000" fill="url(#vignette)" />
+  <rect width="1600" height="1000" filter="url(#grain)" opacity="0.06" />
+</svg>

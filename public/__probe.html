@@ -1,0 +1,32 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>probe</title>
+<style>
+  body{margin:0;background:#090909;display:grid;grid-template-columns:420px 420px 420px;gap:8px;padding:8px}
+  .frame{width:420px;height:300px;overflow:hidden;position:relative;border:1px solid #333}
+  .frame iframe{width:1440px;height:1029px;border:0;transform:scale(0.2917);transform-origin:top left}
+  .label{position:absolute;right:4px;bottom:3px;color:#c6a45a;font:10px monospace;z-index:2;background:#000c;padding:1px 4px}
+</style></head>
+<body>
+  <div class="frame"><iframe data-y="0" src="/world"></iframe><span class="label">/world masthead</span></div>
+  <div class="frame"><iframe data-y="760" src="/world"></iframe><span class="label">/world survey</span></div>
+  <div class="frame"><iframe data-y="1180" src="/world?region=limgrave"></iframe><span class="label">/world dossier</span></div>
+  <div class="frame"><iframe data-y="0" src="/world?region=mohgwyn-palace"></iframe><span class="label">deep link (underworld, focused)</span></div>
+  <div class="frame"><iframe data-y="760" src="/world?region=bayle"></iframe><span class="label">unknown region</span></div>
+  <div class="frame"><iframe data-y="760" src="/characters"></iframe><span class="label">/characters unchanged</span></div>
+<script>
+  document.querySelectorAll('iframe').forEach(function (f) {
+    f.addEventListener('load', function () {
+      var y = Number(f.dataset.y) || 0
+      try {
+        var d = f.contentWindow.document
+        var st = d.createElement('style')
+        st.textContent = '[style*="opacity"]{opacity:1!important;transform:none!important;filter:none!important}'
+        d.head.appendChild(st)
+      } catch (e) {}
+      ;[300, 900, 1700, 2600].forEach(function (delay) {
+        setTimeout(function () { try { f.contentWindow.scrollTo(0, y) } catch (e) {} }, delay)
+      })
+    })
+  })
+</script>
+</body></html>
