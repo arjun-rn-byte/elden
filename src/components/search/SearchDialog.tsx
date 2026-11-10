@@ -1,19 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowRight, CornerDownLeft, Search } from 'lucide-react'
+import { ArrowRight, Compass, CornerDownLeft, Search } from 'lucide-react'
 import { categories, entries, sections } from '../../lib/data'
+import { matchesQuery, regions, stratumLabel } from '../../lib/regions'
 import { EASE } from '../../lib/motion'
 import { useLockBodyScroll } from '../../hooks/useArchive'
 import { cn } from '../../lib/cn'
 
 type Result =
   | { kind: 'entry'; id: string }
+  | { kind: 'region'; id: string; name: string; epithet: string; stratum: string; ref: string }
   | { kind: 'section'; id: string; label: string }
 
 interface SearchDialogProps {
   open: boolean
   onClose: () => void
   onSelectEntry: (id: string) => void
+  onSelectRegion?: (id: string) => void
   onSelectSection: (id: string) => void
 }
 
@@ -23,6 +26,7 @@ export function SearchDialog({
   open,
   onClose,
   onSelectEntry,
+  onSelectRegion,
   onSelectSection,
 }: SearchDialogProps) {
   const [query, setQuery] = useState('')
@@ -47,7 +51,7 @@ export function SearchDialog({
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
-  const { leafResults, passageResults, results } = useMemo(() => {
+  const { leafResults, regionResults, passageResults, results } = useMemo(() => {
     const q = query.trim().toLowerCase()
 
     const leafResults = entries
@@ -66,13 +70,27 @@ export function SearchDialog({
           .toLowerCase()
         return haystack.includes(q)
       })
-      .slice(0, q ? 9 : 5)
+      .slice(0, q ? 6 : 5)
+
+    const regionResults = q
+      ? regions
+          .filter((region) => matchesQuery(region, q))
+          .slice(0, 5)
+      : []
 
     const passageResults = q
       ? passages.filter((section) => section.label.toLowerCase().includes(q))
       : []
 
     const results: Result[] = [
+      ...regionResults.map((r) => ({
+        kind: 'region' as const,
+        id: r.id,
+        name: r.name,
+        epithet: r.epithet,
+        stratum: stratumLabel(r.stratum),
+        ref: r.ref,
+      })),
       ...leafResults.map((entry) => ({ kind: 'entry' as const, id: entry.id })),
       ...passageResults.map((section) => ({
         kind: 'section' as const,
@@ -81,7 +99,7 @@ export function SearchDialog({
       })),
     ]
 
-    return { leafResults, passageResults, results }
+    return { leafResults, regionResults, passageResults, results }
   }, [query])
 
   useEffect(() => {
@@ -96,8 +114,14 @@ export function SearchDialog({
   const openResult = (index: number) => {
     const result = results[index]
     if (!result) return
-    if (result.kind === 'entry') onSelectEntry(result.id)
-    else onSelectSection(result.id)
+    if (result.kind === 'entry') {
+      onSelectEntry(result.id)
+    } else if (result.kind === 'region') {
+      if (onSelectRegion) onSelectRegion(result.id)
+      else onSelectEntry(result.id)
+    } else {
+      onSelectSection(result.id)
+    }
   }
 
   return (
@@ -145,7 +169,7 @@ export function SearchDialog({
                       openResult(highlight)
                     }
                   }}
-                  placeholder="Search by name, place, boss or relic…"
+                  placeholder="Search regions, demigods, bosses or relics…"
                   aria-label="Search the archive"
                   autoComplete="off"
                   spellCheck={false}
@@ -170,7 +194,7 @@ export function SearchDialog({
                       Try a realm, a demigod, or the name of a relic.
                     </p>
                     <div className="mt-6 flex flex-wrap justify-center gap-2">
-                      {['Leyndell', 'Malenia', 'Rot', 'Moon'].map((suggestion) => (
+                      {['Limgrave', 'Leyndell', 'Mohgwyn', 'Malenia', 'Caelid', 'Moon'].map((suggestion) => (
                         <button
                           key={suggestion}
                           type="button"
@@ -184,24 +208,78 @@ export function SearchDialog({
                   </div>
                 ) : (
                   <ul>
+                    {/* Region Results */}
+                    {regionResults.length > 0 ? (
+                      <>
+                        <li className="px-5 pb-2 pt-4 sm:px-6">
+                          <span className="eyebrow text-gold/70">Surveyed Regions</span>
+                        </li>
+                        {regionResults.map((region, rIndex) => {
+                          const active = highlight === rIndex
+                          return (
+                            <li key={region.id}>
+                              <button
+                                id={`search-result-${rIndex}`}
+                                type="button"
+                                onMouseEnter={() => setHighlight(rIndex)}
+                                onClick={() => openResult(rIndex)}
+                                className={cn(
+                                  'flex w-full items-center gap-4 border-l px-5 py-3 text-left transition-colors duration-200 sm:px-6',
+                                  active
+                                    ? 'border-gold bg-gold/[0.08]'
+                                    : 'border-transparent hover:bg-bone/[0.02]',
+                                )}
+                              >
+                                <Compass size={14} className="shrink-0 text-gold/60" />
+                                <span className="w-9 shrink-0 font-inscribed text-[8.5px] tracking-[0.16em] text-gold/45 tabular-nums">
+                                  {region.ref}
+                                </span>
+                                <span className="min-w-0 flex-1">
+                                  <span className="block truncate font-display text-[17px] leading-tight text-bone">
+                                    {region.name}
+                                  </span>
+                                  <span className="mt-0.5 block truncate text-[10.5px] italic text-gold/55">
+                                    {region.epithet}
+                                  </span>
+                                </span>
+                                <span className="shrink-0 border border-gold/20 px-1.5 py-0.5 font-inscribed text-[7.5px] uppercase tracking-[0.16em] text-gold/75">
+                                  {stratumLabel(region.stratum)}
+                                </span>
+                                <CornerDownLeft
+                                  size={12}
+                                  strokeWidth={1.2}
+                                  className={cn(
+                                    'shrink-0 transition-opacity',
+                                    active ? 'text-gold opacity-100' : 'opacity-0',
+                                  )}
+                                />
+                              </button>
+                            </li>
+                          )
+                        })}
+                      </>
+                    ) : null}
+
+                    {/* Leaf results */}
                     {leafResults.length > 0 ? (
                       <li className="px-5 pb-2 pt-4 sm:px-6">
                         <span className="eyebrow text-mute">
-                          {query ? 'Leaves' : 'Suggested leaves'}
+                          {query ? 'Archive Leaves' : 'Suggested leaves'}
                         </span>
                       </li>
                     ) : null}
 
                     {leafResults.map((entry, index) => {
-                      const active = highlight === index
+                      const itemIndex = regionResults.length + index
+                      const active = highlight === itemIndex
                       const wing = categories.find((category) => category.id === entry.category)
                       return (
                         <li key={entry.id}>
                           <button
-                            id={`search-result-${index}`}
+                            id={`search-result-${itemIndex}`}
                             type="button"
-                            onMouseEnter={() => setHighlight(index)}
-                            onClick={() => onSelectEntry(entry.id)}
+                            onMouseEnter={() => setHighlight(itemIndex)}
+                            onClick={() => openResult(itemIndex)}
                             className={cn(
                               'flex w-full items-center gap-4 border-l px-5 py-3 text-left transition-colors duration-200 sm:px-6',
                               active
@@ -243,7 +321,7 @@ export function SearchDialog({
                     ) : null}
 
                     {passageResults.map((section, index) => {
-                      const resultIndex = leafResults.length + index
+                      const resultIndex = regionResults.length + leafResults.length + index
                       const active = highlight === resultIndex
                       return (
                         <li key={section.id}>
@@ -280,7 +358,7 @@ export function SearchDialog({
                 </span>
 
                 <span className="ml-auto hidden font-inscribed text-[8px] uppercase tracking-[0.24em] text-mute/70 md:block">
-                  Six chapters · twenty leaves
+                  Six chapters · twenty regions · twenty leaves
                 </span>
               </div>
             </motion.div>

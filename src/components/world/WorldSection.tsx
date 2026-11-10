@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+import { ArrowRight } from 'lucide-react'
 import { entries } from '../../lib/data'
 import { Reveal } from '../ui/Reveal'
 import { Diamond } from '../ui/Ornament'
@@ -70,7 +72,10 @@ export function WorldSection() {
               <ul className="mt-2">
                 {regions.map((region) => (
                   <li key={region.id}>
-                    <div className="group relative flex items-baseline gap-5 border-b border-gold/10 py-5">
+                    <Link
+                      to={`/world?region=${region.id}`}
+                      className="group relative flex items-baseline gap-5 border-b border-gold/10 py-5 transition-colors duration-300 hover:bg-gold/[0.03]"
+                    >
                       <span className="font-inscribed text-[9px] tracking-[0.2em] text-gold/35 transition-colors duration-500 group-hover:text-gold/70">
                         {region.numeral}
                       </span>
@@ -82,20 +87,29 @@ export function WorldSection() {
                           {region.epithet}
                         </p>
                       </div>
-                      <span
-                        aria-hidden
-                        className="mt-1 hidden h-px w-6 shrink-0 bg-gold/20 transition-[width,background-color] duration-700 group-hover:w-10 group-hover:bg-gold/50 sm:block"
+                      <ArrowRight
+                        size={14}
+                        className="text-gold/30 opacity-0 transition-all duration-300 group-hover:translate-x-1 group-hover:text-gold group-hover:opacity-100"
                       />
-                    </div>
+                    </Link>
                   </li>
                 ))}
               </ul>
 
-              <div className="mt-8 flex items-center gap-3">
-                <Diamond className="h-[4px] w-[4px]" />
-                <p className="text-[10.5px] leading-relaxed text-mute/80">
-                  Every region in the survey is written up in full inside its chapter.
-                </p>
+              <div className="mt-8 flex flex-col gap-4 border-t border-gold/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <Diamond className="h-[4px] w-[4px]" />
+                  <p className="text-[10.5px] leading-relaxed text-mute/80">
+                    Twenty regions surveyed across three plates.
+                  </p>
+                </div>
+                <Link
+                  to="/world"
+                  className="group inline-flex shrink-0 items-center gap-2 border border-gold/25 px-3 py-1.5 font-inscribed text-[8px] uppercase tracking-[0.22em] text-gold transition-colors duration-300 hover:border-gold/60 hover:bg-gold/[0.06]"
+                >
+                  Enter the Atlas
+                  <ArrowRight size={11} className="transition-transform duration-300 group-hover:translate-x-0.5" />
+                </Link>
               </div>
             </Reveal>
           </div>

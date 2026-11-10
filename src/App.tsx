@@ -28,6 +28,14 @@ export default function App() {
     [navigate],
   )
 
+  const searchRegion = useCallback(
+    (id: string) => {
+      setSearchOpen(false)
+      navigate(`/world?region=${id}`)
+    },
+    [navigate],
+  )
+
   const searchSection = useCallback(
     (id: string) => {
       setSearchOpen(false)
@@ -80,6 +88,7 @@ export default function App() {
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
         onSelectEntry={searchEntry}
+        onSelectRegion={searchRegion}
         onSelectSection={searchSection}
       />
     </MotionConfig>
