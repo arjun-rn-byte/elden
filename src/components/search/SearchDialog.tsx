@@ -1,15 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowRight, Compass, CornerDownLeft, Search } from 'lucide-react'
+import { ArrowRight, Compass, CornerDownLeft, Search, User, Skull } from 'lucide-react'
 import { categories, entries, sections } from '../../lib/data'
 import { matchesQuery, regions, stratumLabel } from '../../lib/regions'
+import { characters } from '../../lib/characters'
+import { bosses } from '../../lib/bosses'
 import { EASE } from '../../lib/motion'
 import { useLockBodyScroll } from '../../hooks/useArchive'
 import { cn } from '../../lib/cn'
 
 type Result =
-  | { kind: 'entry'; id: string }
+  | { kind: 'character'; id: string; name: string; epithet: string; type: string }
+  | { kind: 'boss'; id: string; name: string; epithet: string; category: string; difficulty: string }
   | { kind: 'region'; id: string; name: string; epithet: string; stratum: string; ref: string }
+  | { kind: 'entry'; id: string }
   | { kind: 'section'; id: string; label: string }
 
 interface SearchDialogProps {
@@ -17,6 +21,8 @@ interface SearchDialogProps {
   onClose: () => void
   onSelectEntry: (id: string) => void
   onSelectRegion?: (id: string) => void
+  onSelectCharacter?: (id: string) => void
+  onSelectBoss?: (id: string) => void
   onSelectSection: (id: string) => void
 }
 
@@ -27,6 +33,8 @@ export function SearchDialog({
   onClose,
   onSelectEntry,
   onSelectRegion,
+  onSelectCharacter,
+  onSelectBoss,
   onSelectSection,
 }: SearchDialogProps) {
   const [query, setQuery] = useState('')
@@ -51,8 +59,39 @@ export function SearchDialog({
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
-  const { leafResults, regionResults, passageResults, results } = useMemo(() => {
+  const { characterResults, bossResults, regionResults, leafResults, passageResults, results } = useMemo(() => {
     const q = query.trim().toLowerCase()
+
+    const characterResults = q
+      ? characters
+          .filter(
+            (c) =>
+              c.name.toLowerCase().includes(q) ||
+              c.title.toLowerCase().includes(q) ||
+              c.epithet.toLowerCase().includes(q) ||
+              c.faction.toLowerCase().includes(q),
+          )
+          .slice(0, 5)
+      : []
+
+    const bossResults = q
+      ? bosses
+          .filter(
+            (b) =>
+              b.name.toLowerCase().includes(q) ||
+              b.title.toLowerCase().includes(q) ||
+              b.epithet.toLowerCase().includes(q) ||
+              b.location.toLowerCase().includes(q) ||
+              b.category.toLowerCase().includes(q),
+          )
+          .slice(0, 5)
+      : []
+
+    const regionResults = q
+      ? regions
+          .filter((region) => matchesQuery(region, q))
+          .slice(0, 5)
+      : []
 
     const leafResults = entries
       .filter((entry) => {
@@ -70,19 +109,28 @@ export function SearchDialog({
           .toLowerCase()
         return haystack.includes(q)
       })
-      .slice(0, q ? 6 : 5)
-
-    const regionResults = q
-      ? regions
-          .filter((region) => matchesQuery(region, q))
-          .slice(0, 5)
-      : []
+      .slice(0, q ? 5 : 5)
 
     const passageResults = q
       ? passages.filter((section) => section.label.toLowerCase().includes(q))
       : []
 
     const results: Result[] = [
+      ...characterResults.map((c) => ({
+        kind: 'character' as const,
+        id: c.id,
+        name: c.name,
+        epithet: c.epithet,
+        type: `${c.type} · ${c.faction}`,
+      })),
+      ...bossResults.map((b) => ({
+        kind: 'boss' as const,
+        id: b.id,
+        name: b.name,
+        epithet: b.epithet,
+        category: b.category,
+        difficulty: b.difficulty,
+      })),
       ...regionResults.map((r) => ({
         kind: 'region' as const,
         id: r.id,
@@ -99,7 +147,7 @@ export function SearchDialog({
       })),
     ]
 
-    return { leafResults, regionResults, passageResults, results }
+    return { characterResults, bossResults, regionResults, leafResults, passageResults, results }
   }, [query])
 
   useEffect(() => {
@@ -114,11 +162,17 @@ export function SearchDialog({
   const openResult = (index: number) => {
     const result = results[index]
     if (!result) return
-    if (result.kind === 'entry') {
-      onSelectEntry(result.id)
+    if (result.kind === 'character') {
+      if (onSelectCharacter) onSelectCharacter(result.id)
+      else onSelectEntry(result.id)
+    } else if (result.kind === 'boss') {
+      if (onSelectBoss) onSelectBoss(result.id)
+      else onSelectEntry(result.id)
     } else if (result.kind === 'region') {
       if (onSelectRegion) onSelectRegion(result.id)
       else onSelectEntry(result.id)
+    } else if (result.kind === 'entry') {
+      onSelectEntry(result.id)
     } else {
       onSelectSection(result.id)
     }
@@ -169,7 +223,7 @@ export function SearchDialog({
                       openResult(highlight)
                     }
                   }}
-                  placeholder="Search regions, demigods, bosses or relics…"
+                  placeholder="Search characters, regions, bosses, or relics…"
                   aria-label="Search the archive"
                   autoComplete="off"
                   spellCheck={false}
@@ -191,10 +245,10 @@ export function SearchDialog({
                       Nothing in the archive answers to that.
                     </p>
                     <p className="mt-2 text-[11px] tracking-[0.04em] text-mute">
-                      Try a realm, a demigod, or the name of a relic.
+                      Try a demigod, a realm, or the name of a relic.
                     </p>
                     <div className="mt-6 flex flex-wrap justify-center gap-2">
-                      {['Limgrave', 'Leyndell', 'Mohgwyn', 'Malenia', 'Caelid', 'Moon'].map((suggestion) => (
+                      {['Marika', 'Malenia', 'Ranni', 'Radahn', 'Limgrave', 'Caelid'].map((suggestion) => (
                         <button
                           key={suggestion}
                           type="button"
@@ -208,13 +262,113 @@ export function SearchDialog({
                   </div>
                 ) : (
                   <ul>
+                    {/* Character Results */}
+                    {characterResults.length > 0 ? (
+                      <>
+                        <li className="px-5 pb-2 pt-4 sm:px-6">
+                          <span className="eyebrow text-gold/80">Characters & Demigods</span>
+                        </li>
+                        {characterResults.map((char, cIndex) => {
+                          const active = highlight === cIndex
+                          return (
+                            <li key={char.id}>
+                              <button
+                                id={`search-result-${cIndex}`}
+                                type="button"
+                                onMouseEnter={() => setHighlight(cIndex)}
+                                onClick={() => openResult(cIndex)}
+                                className={cn(
+                                  'flex w-full items-center gap-4 border-l px-5 py-3 text-left transition-colors duration-200 sm:px-6',
+                                  active
+                                    ? 'border-gold bg-gold/[0.08]'
+                                    : 'border-transparent hover:bg-bone/[0.02]',
+                                )}
+                              >
+                                <User size={14} className="shrink-0 text-gold/70" />
+                                <span className="min-w-0 flex-1">
+                                  <span className="block truncate font-display text-[17px] leading-tight text-bone">
+                                    {char.name}
+                                  </span>
+                                  <span className="mt-0.5 block truncate text-[10.5px] italic text-gold/60">
+                                    {char.epithet}
+                                  </span>
+                                </span>
+                                <span className="shrink-0 border border-gold/20 px-1.5 py-0.5 font-inscribed text-[7.5px] uppercase tracking-[0.16em] text-gold/75">
+                                  {char.type}
+                                </span>
+                                <CornerDownLeft
+                                  size={12}
+                                  strokeWidth={1.2}
+                                  className={cn(
+                                    'shrink-0 transition-opacity',
+                                    active ? 'text-gold opacity-100' : 'opacity-0',
+                                  )}
+                                />
+                              </button>
+                            </li>
+                          )
+                        })}
+                      </>
+                    ) : null}
+
+                    {/* Boss Results */}
+                    {bossResults.length > 0 ? (
+                      <>
+                        <li className="px-5 pb-2 pt-4 sm:px-6">
+                          <span className="eyebrow text-[#c93832]">Adversaries & Bosses</span>
+                        </li>
+                        {bossResults.map((boss, bIdx) => {
+                          const bIndex = characterResults.length + bIdx
+                          const active = highlight === bIndex
+                          return (
+                            <li key={boss.id}>
+                              <button
+                                id={`search-result-${bIndex}`}
+                                type="button"
+                                onMouseEnter={() => setHighlight(bIndex)}
+                                onClick={() => openResult(bIndex)}
+                                className={cn(
+                                  'flex w-full items-center gap-4 border-l px-5 py-3 text-left transition-colors duration-200 sm:px-6',
+                                  active
+                                    ? 'border-[#c93832] bg-[#c93832]/[0.1]'
+                                    : 'border-transparent hover:bg-bone/[0.02]',
+                                )}
+                              >
+                                <Skull size={14} className="shrink-0 text-[#c93832]" />
+                                <span className="min-w-0 flex-1">
+                                  <span className="block truncate font-display text-[17px] leading-tight text-bone">
+                                    {boss.name}
+                                  </span>
+                                  <span className="mt-0.5 block truncate text-[10.5px] italic text-[#e8c26a]/80">
+                                    {boss.epithet}
+                                  </span>
+                                </span>
+                                <span className="shrink-0 border border-[#c93832]/30 px-1.5 py-0.5 font-inscribed text-[7.5px] uppercase tracking-[0.16em] text-[#ff8080]">
+                                  {boss.difficulty}
+                                </span>
+                                <CornerDownLeft
+                                  size={12}
+                                  strokeWidth={1.2}
+                                  className={cn(
+                                    'shrink-0 transition-opacity',
+                                    active ? 'text-[#c93832] opacity-100' : 'opacity-0',
+                                  )}
+                                />
+                              </button>
+                            </li>
+                          )
+                        })}
+                      </>
+                    ) : null}
+
                     {/* Region Results */}
                     {regionResults.length > 0 ? (
                       <>
                         <li className="px-5 pb-2 pt-4 sm:px-6">
                           <span className="eyebrow text-gold/70">Surveyed Regions</span>
                         </li>
-                        {regionResults.map((region, rIndex) => {
+                        {regionResults.map((region, rIdx) => {
+                          const rIndex = characterResults.length + bossResults.length + rIdx
                           const active = highlight === rIndex
                           return (
                             <li key={region.id}>
@@ -270,7 +424,8 @@ export function SearchDialog({
                     ) : null}
 
                     {leafResults.map((entry, index) => {
-                      const itemIndex = regionResults.length + index
+                      const itemIndex =
+                        characterResults.length + bossResults.length + regionResults.length + index
                       const active = highlight === itemIndex
                       const wing = categories.find((category) => category.id === entry.category)
                       return (
@@ -321,7 +476,12 @@ export function SearchDialog({
                     ) : null}
 
                     {passageResults.map((section, index) => {
-                      const resultIndex = regionResults.length + leafResults.length + index
+                      const resultIndex =
+                        characterResults.length +
+                        bossResults.length +
+                        regionResults.length +
+                        leafResults.length +
+                        index
                       const active = highlight === resultIndex
                       return (
                         <li key={section.id}>
@@ -329,7 +489,7 @@ export function SearchDialog({
                             id={`search-result-${resultIndex}`}
                             type="button"
                             onMouseEnter={() => setHighlight(resultIndex)}
-                            onClick={() => onSelectSection(section.id)}
+                            onClick={() => openResult(resultIndex)}
                             className={cn(
                               'flex w-full items-center gap-4 border-l px-5 py-3 text-left transition-colors duration-200 sm:px-6',
                               active
@@ -358,7 +518,7 @@ export function SearchDialog({
                 </span>
 
                 <span className="ml-auto hidden font-inscribed text-[8px] uppercase tracking-[0.24em] text-mute/70 md:block">
-                  Six chapters · twenty regions · twenty leaves
+                  Six chapters · eighteen demigods · twenty regions
                 </span>
               </div>
             </motion.div>

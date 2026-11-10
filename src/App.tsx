@@ -9,6 +9,8 @@ import { SearchDialog } from './components/search/SearchDialog'
 import { HomePage } from './pages/HomePage'
 import { ChapterPage } from './pages/ChapterPage'
 import { WorldPage } from './pages/WorldPage'
+import { CharactersPage } from './pages/CharactersPage'
+import { BossesPage } from './pages/BossesPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { chapterPath, getChapter } from './lib/chapters'
 import { entries } from './lib/data'
@@ -32,6 +34,22 @@ export default function App() {
     (id: string) => {
       setSearchOpen(false)
       navigate(`/world?region=${id}`)
+    },
+    [navigate],
+  )
+
+  const searchCharacter = useCallback(
+    (id: string) => {
+      setSearchOpen(false)
+      navigate(`/characters?character=${id}`)
+    },
+    [navigate],
+  )
+
+  const searchBoss = useCallback(
+    (id: string) => {
+      setSearchOpen(false)
+      navigate(`/bosses?boss=${id}`)
     },
     [navigate],
   )
@@ -74,8 +92,10 @@ export default function App() {
         <main id="main" className="flex-1">
           <Routes>
             <Route path="/" element={<HomePage />} />
-            {/* The world chapter is an atlas of its own, not a leaf index. */}
+            {/* Dedicated encyclopedic volumes */}
             <Route path="/world" element={<WorldPage />} />
+            <Route path="/characters" element={<CharactersPage />} />
+            <Route path="/bosses" element={<BossesPage />} />
             <Route path="/:chapter" element={<ChapterPageRoute />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
@@ -89,6 +109,8 @@ export default function App() {
         onClose={() => setSearchOpen(false)}
         onSelectEntry={searchEntry}
         onSelectRegion={searchRegion}
+        onSelectCharacter={searchCharacter}
+        onSelectBoss={searchBoss}
         onSelectSection={searchSection}
       />
     </MotionConfig>
